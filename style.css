@@ -1,0 +1,216 @@
+:root {
+    /* Wabi-Sabi Inspired Palette */
+    --bg-color: #FdfcF8; /* Rice Paper */
+    --text-main: #2C2C2C; /* Sumi Ink */
+    --text-sub: #5F5F5F; /* Stone Grey */
+    --accent: #8E7C68; /* Dried Bamboo */
+    --line: #E0DDD5;
+    
+    --sidebar-width: 320px;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Inter', 'Noto Serif TC', serif;
+    line-height: 1.8;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Layout */
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    padding: 4rem 2.5rem;
+    border-right: 1px solid var(--line);
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: #FAF9F6;
+    display: flex;
+    flex-direction: column;
+}
+
+.site-title {
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.site-title a {
+    text-decoration: none;
+    color: var(--text-main);
+}
+
+.site-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* 分隔線：將標題區與文章列表區隔開來 */
+.site-header-group {
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.site-description {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.95rem;
+    color: var(--text-sub);
+    line-height: 1.6;
+    font-style: italic;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.post-list li {
+    margin-bottom: 1.2rem;
+}
+
+.post-list a {
+    text-decoration: none;
+    color: var(--text-sub);
+    font-family: 'Noto Serif TC', serif; /* 恢復襯線字體 */
+    font-size: 1rem;
+    display: block;
+    padding: 0.2rem 0;
+    transition: all 0.2s;
+    line-height: 1.4;
+}
+
+.post-list a:hover, .post-list a.active {
+    color: var(--accent);
+    font-weight: 600;
+    padding-left: 0.5rem; /* 微互動：懸停時向右移動 */
+    border-left: 2px solid var(--accent);
+}
+
+.footer {
+    margin-top: 3rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    color: #999;
+    letter-spacing: 0.05em;
+}
+
+/* Main Content */
+.content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 5rem 8rem;
+    max-width: 900px;
+}
+
+/* Post Styling */
+article.post {
+    margin-bottom: 5rem;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.post-meta {
+    margin-bottom: 1.5rem;
+}
+
+.post-date {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    font-weight: 500;
+}
+
+h2.post-title {
+    font-family: 'Noto Serif TC', serif; /* 確保標題使用好看的襯線字體 */
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0.5rem 0 2.5rem 0;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+}
+
+.post-content {
+    font-family: 'Noto Serif TC', serif; /* 內文也使用襯線字體，增加閱讀質感 */
+    font-size: 1.15rem;
+    color: #3a3a3a;
+    text-align: justify;
+    line-height: 2; /* 增加行高，更舒適 */
+    font-weight: 300;
+}
+
+.post-content p {
+    margin-bottom: 2rem;
+}
+
+.tags {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px dashed var(--line);
+}
+
+.tag {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-right: 1rem;
+    opacity: 0.8;
+    background: rgba(142, 124, 104, 0.1); /* 淡淡的背景色 */
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Giscus Container */
+.giscus {
+    margin-top: 5rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+    .layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 3rem 2rem;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .content {
+        margin-left: 0;
+        padding: 3rem 2rem;
+    }
+    
+    h2.post-title {
+        font-size: 1.8rem;
+    }
+}
