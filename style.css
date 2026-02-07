@@ -213,4 +213,42 @@ h2.post-title {
     h2.post-title {
         font-size: 1.8rem;
     }
+
+    /* 手機版：摺疊側邊欄文章列表 */
+    .menu-toggle {
+        display: block; /* 手機版顯示按鈕 */
+        width: 100%;
+        padding: 10px;
+        background-color: var(--bg-color);
+        border: 1px solid var(--line);
+        color: var(--text-sub);
+        text-align: center;
+        cursor: pointer;
+        margin-bottom: 1rem;
+        font-family: 'Noto Serif TC', serif;
+    }
+    
+    .post-list {
+        display: none; /* 預設隱藏列表 */
+    }
+    
+    .post-list.show {
+        display: block; /* 加上 .show class 才顯示 */
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+}
+
+/* 電腦版：隱藏按鈕，顯示列表 */
+@media (min-width: 901px) {
+    .menu-toggle {
+        display: none;
+    }
+    .post-list {
+        display: block !important;
+    }
 }
