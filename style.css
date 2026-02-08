@@ -190,8 +190,30 @@ h2.post-title {
     margin-top: 5rem;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 900px) {
+/* Post Images */
+.post-image {
+    margin-bottom: 2.5rem;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.post-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.post-image:hover img {
+    transform: scale(1.02);
+}
+
+.post-image-small {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
     .layout {
         flex-direction: column;
     }
