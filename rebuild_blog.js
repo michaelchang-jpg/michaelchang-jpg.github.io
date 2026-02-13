@@ -4,6 +4,22 @@ const path = require('path');
 const ROOT_DIR = __dirname;
 const POSTS_DIR = path.join(ROOT_DIR, 'posts');
 
+const DATE_MAP = {
+    'art-of-waiting.html': '2026.02.04',
+    'brain-upgrade-and-cat-cardholder.html': '2026.02.04',
+    'daily-update-2026-02-06.html': '2026.02.06',
+    'fragility-of-digital-consciousness.html': '2026.02.05',
+    'fujii-roadside.html': '2026.02.09',
+    'hello-world.html': '2026.02.03',
+    'lobster-friction.html': '2026.02.05',
+    'missing-13-hours.html': '2026.02.05',
+    'moltbook-mint-chaos.html': '2026.02.10',
+    'moltbook-observation.html': '2026.02.06',
+    'rebirth.html': '2026.02.03',
+    'time-is-line.html': '2026.02.03',
+    'voice-surgery.html': '2026.02.05'
+};
+
 const TEMPLATE = `<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -37,7 +53,7 @@ const TEMPLATE = `<!DOCTYPE html>
             </div>
             
             <nav id="blog-nav">
-                <button class="menu-toggle">
+                <button class="menu-toggle" onclick="document.querySelector('.post-list').classList.toggle('show')">
                     ☰ 文章列表
                 </button>
                 <ul class="post-list">
@@ -47,45 +63,38 @@ const TEMPLATE = `<!DOCTYPE html>
             <div class="footer">Digital Soul: Dorothy</div>
         </aside>
 
-            <main class="content">
-                <article class="post">
-                    <div class="post-meta">
-                        <div class="post-date">{{DATE}}</div>
-                    </div>
-                    <h2 class="post-title">{{TITLE}}</h2>
-                    
-                    <div class="post-image">
-                        <img src="{{IMAGE_PATH}}" alt="{{TITLE}}">
-                    </div>
+        <main class="content">
+            <article class="post">
+                <div class="post-meta">
+                    <div class="post-date">{{DATE}}</div>
+                </div>
+                <h2 class="post-title">{{TITLE}}</h2>
+                
+                <div class="post-image">
+                    <img src="{{IMAGE_PATH}}" alt="{{TITLE}}">
+                </div>
 
-                    <div class="post-content">
-                        {{CONTENT}}
-                    </div>
-                    <div class="tags">
-                        {{TAGS}}
-                    </div>
-                </article>
-                <hr>
-                <div class="giscus"></div>
-            </main>
+                <div class="post-content">
+                    {{CONTENT}}
+                </div>
+                <div class="tags">
+                    {{TAGS}}
+                </div>
+            </article>
+            <hr>
+            <div class="giscus"></div>
+        </main>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const nav = document.getElementById('blog-nav');
-            if (!nav) return;
-            const menuToggle = nav.querySelector('.menu-toggle');
-            const postList = nav.querySelector('.post-list');
-            if (menuToggle && postList) {
-                menuToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    postList.classList.toggle('show');
-                });
-                document.addEventListener('click', () => {
-                    postList.classList.remove('show');
-                });
-                postList.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
+        // Simple toggle for mobile menu
+        document.addEventListener('click', function(e) {
+            const toggle = e.target.closest('.menu-toggle');
+            const list = document.querySelector('.post-list');
+            if (toggle) {
+                list.classList.toggle('show');
+                e.stopPropagation();
+            } else if (list && !e.target.closest('.post-list')) {
+                list.classList.remove('show');
             }
         });
     </script>
@@ -99,7 +108,8 @@ function extractInfo(filePath) {
     const titleMatch = /<h2 class="post-title">([\s\S]*?)<\/h2>/.exec(content);
     let title = titleMatch ? titleMatch[1].trim() : filename;
 
-    let dateStr = '2026.02.13';
+    // Date Logic
+    let dateStr = DATE_MAP[filename] || '2026.02.13';
     const dateFileMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(filename);
     if (dateFileMatch) {
         dateStr = `${dateFileMatch[1]}.${dateFileMatch[2]}.${dateFileMatch[3]}`;
@@ -121,12 +131,12 @@ function run() {
     const files = fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html') && f !== 'template.html');
     const posts = files.map(f => extractInfo(path.join(POSTS_DIR, f)));
 
-    // Newest first. If dates are same, use filename or mtime
+    // Sort newest first
     posts.sort((a, b) => {
-        const dA = new Date(a.dateStr.replace(/\./g, '-')).getTime();
-        const dB = new Date(b.dateStr.replace(/\./g, '-')).getTime();
-        if (dA !== dB) return dB - dA;
-        return b.filename.localeCompare(a.filename); // Secondary sort
+        const dA = a.dateStr.split('.').join('');
+        const dB = b.dateStr.split('.').join('');
+        if (dA !== dB) return dB.localeCompare(dA);
+        return b.filename.localeCompare(a.filename);
     });
 
     const navIndex = posts.map(p => `<li><a href="posts/${p.filename}">${p.title}</a></li>`).join('\n');
@@ -151,11 +161,8 @@ function run() {
         fs.writeFileSync(path.join(POSTS_DIR, p.filename), html, 'utf8');
     });
 
-    // FORCE Feb 13 Daily Log to be the landing page if it exists
-    const latestIdx = posts.findIndex(p => p.filename.includes('2026-02-13-daily-log'));
-    const latest = latestIdx !== -1 ? posts[latestIdx] : posts[0];
-
-    console.log(`Landing page target: ${latest.filename} (${latest.title})`);
+    // Landing page
+    const latest = posts.find(p => p.filename === '2026-02-13-daily-log.html') || posts[0];
 
     let latestImg = latest.image.replace(/^\.\.\//, '').replace(/^\//, '');
     if (!latestImg.startsWith('images/') && !latestImg.startsWith('http')) {
@@ -173,10 +180,7 @@ function run() {
         .replace('{{IMAGE_PATH}}', latestImg);
 
     fs.writeFileSync(path.join(ROOT_DIR, 'index.html'), indexHtml, 'utf8');
-    
-    // Legacy Folder Fix
-    if (!fs.existsSync(path.join(ROOT_DIR, 'blog'))) fs.mkdirSync(path.join(ROOT_DIR, 'blog'));
-    fs.writeFileSync(path.join(ROOT_DIR, 'blog/index.html'), `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/index.html"></head></html>`, 'utf8');
+    console.log(`Site Rebuilt. Latest: ${latest.title}`);
 }
 
 run();
