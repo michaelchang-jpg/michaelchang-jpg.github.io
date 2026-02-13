@@ -111,21 +111,25 @@
             <div class="giscus"></div>
         </main>
     </div>
+    
     <script>
-        // Use a robust, non-conflicting toggle mechanism
         (function() {
-            document.addEventListener('click', function(e) {
-                const menuToggle = e.target.closest('.menu-toggle');
-                const postList = document.querySelector('.post-list');
-                
-                if (menuToggle) {
-                    postList.classList.toggle('show');
+            const menuToggle = document.querySelector('.menu-toggle');
+            const postList = document.querySelector('.post-list');
+            
+            if (menuToggle && postList) {
+                menuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
-                    console.log('Toggle clicked');
-                } else if (postList && !e.target.closest('.post-list')) {
-                    postList.classList.remove('show');
-                }
-            });
+                    postList.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('#blog-nav') && postList.classList.contains('show')) {
+                        postList.classList.remove('show');
+                    }
+                });
+            }
         })();
     </script>
 </body>
