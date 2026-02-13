@@ -1,0 +1,19 @@
+# Ignore system files and large directories
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Ignore media files (too large for git)
+media/
+*.jpg
+*.png
+*.mp4
+*.mp3
+
+# Ignore temporary files
+temp_*
+*.tmp
+*.log
+
+# Ignore session-specific or sensitive data
+.config/

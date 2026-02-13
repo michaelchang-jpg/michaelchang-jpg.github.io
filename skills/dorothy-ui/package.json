@@ -1,0 +1,8 @@
+{
+  "name": "dorothy-ui",
+  "version": "1.0.0",
+  "description": "Custom UI for Dorothy",
+  "openclaw": {
+    "emoji": "✨"
+  }
+}

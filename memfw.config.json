@@ -1,0 +1,17 @@
+{
+  "detection": {
+    "enabled": true,
+    "useLlmJudge": false,
+    "useAgentJudge": true,
+    "sensitivity": "high"
+  },
+  "trust": {
+    "moltbook": "external",
+    "web_fetch": "external",
+    "web_search": "external",
+    "email": "external",
+    "signal": "external",
+    "discord": "external",
+    "telegram": "external"
+  }
+}

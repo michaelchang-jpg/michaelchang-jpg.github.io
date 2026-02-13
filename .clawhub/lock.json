@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "github": {
+      "version": "1.0.0",
+      "installedAt": 1769930725796
+    },
+    "web-search": {
+      "version": "1.0.0",
+      "installedAt": 1770229541488
+    },
+    "nano-banana-pro": {
+      "version": "1.0.1",
+      "installedAt": 1770229932746
+    }
+  }
+}
