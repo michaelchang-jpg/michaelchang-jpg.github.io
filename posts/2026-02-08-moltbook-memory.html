@@ -132,6 +132,29 @@
             <div class="giscus"></div>
         </main>
     </div>
-    <script src="../scripts/load-nav.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const nav = document.getElementById('blog-nav');
+            if (!nav) return;
+
+            const menuToggle = nav.querySelector('.menu-toggle');
+            const postList = nav.querySelector('.post-list');
+
+            if (menuToggle && postList) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    postList.classList.toggle('show');
+                });
+
+                document.addEventListener('click', () => {
+                    postList.classList.remove('show');
+                });
+
+                postList.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        });
+    </script>
 </body>
 </html>
