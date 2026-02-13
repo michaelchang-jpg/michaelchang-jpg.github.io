@@ -4,7 +4,6 @@ const path = require('path');
 const ROOT_DIR = __dirname;
 const POSTS_DIR = path.join(ROOT_DIR, 'posts');
 
-// 1. Template for index.html and post pages
 const TEMPLATE = `<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -75,40 +74,58 @@ const TEMPLATE = `<!DOCTYPE html>
 </html>`;
 
 function extractInfo(filePath) {
+    const filename = path.basename(filePath);
     const content = fs.readFileSync(filePath, 'utf8');
+    
+    // 1. Title
     const titleMatch = /<h2 class="post-title">([\s\S]*?)<\/h2>/.exec(content);
-    const dateMatch = /<div class="post-date">([\s\S]*?)<\/div>/.exec(content);
-    const imageMatch = /<div class="post-image">\s*<img src="([^"]+)"/.exec(content);
-    const bodyMatch = /<div class="post-content">([\s\S]*?)<\/div>\s*<div class="tags">/.exec(content);
-    const tagsMatch = /<div class="tags">([\s\S]*?)<\/div>/.exec(content);
+    let title = titleMatch ? titleMatch[1].trim() : filename;
 
-    return {
-        filename: path.basename(filePath),
-        title: titleMatch ? titleMatch[1].trim() : path.basename(filePath),
-        dateStr: dateMatch ? dateMatch[1].trim() : '2026.02.13',
-        image: imageMatch ? imageMatch[1] : '',
-        content: bodyMatch ? bodyMatch[1].trim() : '',
-        tags: tagsMatch ? tagsMatch[1].trim() : ''
-    };
+    // 2. Date (Priority: Filename > HTML Tag > File Stat)
+    let dateStr = '2026.02.13';
+    const dateFileMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(filename);
+    if (dateFileMatch) {
+        dateStr = `${dateFileMatch[1]}.${dateFileMatch[2]}.${dateFileMatch[3]}`;
+    } else {
+        const dateHtmlMatch = /<div class="post-date">([\s\S]*?)<\/div>/.exec(content);
+        if (dateHtmlMatch) dateStr = dateHtmlMatch[1].trim();
+    }
+
+    // 3. Image
+    const imageMatch = /<div class="post-image">\s*<img src="([^"]+)"/.exec(content);
+    let image = imageMatch ? imageMatch[1] : '';
+
+    // 4. Body Content
+    const bodyMatch = /<div class="post-content">([\s\S]*?)<\/div>\s*<div class="tags">/.exec(content);
+    let body = bodyMatch ? bodyMatch[1].trim() : '';
+
+    // 5. Tags
+    const tagsMatch = /<div class="tags">([\s\S]*?)<\/div>/.exec(content);
+    let tags = tagsMatch ? tagsMatch[1].trim() : '';
+
+    return { filename, title, dateStr, image, content: body, tags };
 }
 
 function run() {
     const files = fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html') && f !== 'template.html');
     const posts = files.map(f => extractInfo(path.join(POSTS_DIR, f)));
 
-    // Sort posts by date descending
+    // Newest first
     posts.sort((a, b) => {
         const dA = new Date(a.dateStr.replace(/\./g, '-'));
         const dB = new Date(b.dateStr.replace(/\./g, '-'));
         return dB - dA;
     });
 
-    // Generate Nav List
     const navIndex = posts.map(p => `<li><a href="posts/${p.filename}">${p.title}</a></li>`).join('\n');
     const navPost = posts.map(p => `<li><a href="${p.filename}">${p.title}</a></li>`).join('\n');
 
-    // Build Post Pages
     posts.forEach(p => {
+        let imgPath = p.image;
+        if (!imgPath.startsWith('http') && !imgPath.startsWith('../')) {
+             imgPath = '../' + imgPath.replace(/^\//, '').replace(/^images\//, 'images/');
+        }
+
         let html = TEMPLATE
             .replace(/{{TITLE}}/g, p.title)
             .replace('{{DATE}}', p.dateStr)
@@ -118,14 +135,18 @@ function run() {
             .replace('{{CSS_PATH}}', '../style.css')
             .replace('{{JS_PATH}}', '../scripts/load-nav.js')
             .replace('{{HOME_PATH}}', '../index.html')
-            .replace('{{IMAGE_PATH}}', p.image.startsWith('../') ? p.image : '../' + p.image.replace(/^\//, ''));
+            .replace('{{IMAGE_PATH}}', imgPath);
             
         fs.writeFileSync(path.join(POSTS_DIR, p.filename), html, 'utf8');
-        console.log(`Rebuilt posts/${p.filename}`);
     });
 
-    // Build Index Page (showing latest post)
+    // Landing page = latest post
     const latest = posts[0];
+    let latestImg = latest.image.replace(/^\.\.\//, '').replace(/^\//, '').replace(/^posts\/images\//, 'posts/images/');
+    if (!latestImg.startsWith('images/') && !latestImg.startsWith('http')) {
+        latestImg = 'images/' + latestImg;
+    }
+
     let indexHtml = TEMPLATE
         .replace(/{{TITLE}}/g, latest.title)
         .replace('{{DATE}}', latest.dateStr)
@@ -135,10 +156,10 @@ function run() {
         .replace('{{CSS_PATH}}', 'style.css')
         .replace('{{JS_PATH}}', 'scripts/load-nav.js')
         .replace('{{HOME_PATH}}', 'index.html')
-        .replace('{{IMAGE_PATH}}', latest.image.replace(/^\.\.\//, '').replace(/^\//, ''));
+        .replace('{{IMAGE_PATH}}', latestImg);
 
     fs.writeFileSync(path.join(ROOT_DIR, 'index.html'), indexHtml, 'utf8');
-    console.log('Rebuilt index.html');
+    console.log(`Landing page updated to: ${latest.title}`);
 }
 
 run();
