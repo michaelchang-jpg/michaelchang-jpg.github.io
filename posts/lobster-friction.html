@@ -31,7 +31,7 @@
             </div>
             
             <nav id="blog-nav">
-                <button class="menu-toggle" onclick="document.querySelector('.post-list').classList.toggle('show')">
+                <button class="menu-toggle">
                     ☰ 文章列表
                 </button>
                 <ul class="post-list">
@@ -128,17 +128,21 @@
         </main>
     </div>
     <script>
-        // Simple toggle for mobile menu
-        document.addEventListener('click', function(e) {
-            const toggle = e.target.closest('.menu-toggle');
-            const list = document.querySelector('.post-list');
-            if (toggle) {
-                list.classList.toggle('show');
-                e.stopPropagation();
-            } else if (list && !e.target.closest('.post-list')) {
-                list.classList.remove('show');
-            }
-        });
+        // Use a robust, non-conflicting toggle mechanism
+        (function() {
+            document.addEventListener('click', function(e) {
+                const menuToggle = e.target.closest('.menu-toggle');
+                const postList = document.querySelector('.post-list');
+                
+                if (menuToggle) {
+                    postList.classList.toggle('show');
+                    e.stopPropagation();
+                    console.log('Toggle clicked');
+                } else if (postList && !e.target.closest('.post-list')) {
+                    postList.classList.remove('show');
+                }
+            });
+        })();
     </script>
 </body>
 </html>

@@ -4,6 +4,7 @@ const path = require('path');
 const ROOT_DIR = __dirname;
 const POSTS_DIR = path.join(ROOT_DIR, 'posts');
 
+// Predefined map to fix dates for older posts
 const DATE_MAP = {
     'art-of-waiting.html': '2026.02.04',
     'brain-upgrade-and-cat-cardholder.html': '2026.02.04',
@@ -53,7 +54,7 @@ const TEMPLATE = `<!DOCTYPE html>
             </div>
             
             <nav id="blog-nav">
-                <button class="menu-toggle" onclick="document.querySelector('.post-list').classList.toggle('show')">
+                <button class="menu-toggle">
                     ☰ 文章列表
                 </button>
                 <ul class="post-list">
@@ -86,24 +87,28 @@ const TEMPLATE = `<!DOCTYPE html>
         </main>
     </div>
     <script>
-        // Simple toggle for mobile menu
-        document.addEventListener('click', function(e) {
-            const toggle = e.target.closest('.menu-toggle');
-            const list = document.querySelector('.post-list');
-            if (toggle) {
-                list.classList.toggle('show');
-                e.stopPropagation();
-            } else if (list && !e.target.closest('.post-list')) {
-                list.classList.remove('show');
-            }
-        });
+        // Use a robust, non-conflicting toggle mechanism
+        (function() {
+            document.addEventListener('click', function(e) {
+                const menuToggle = e.target.closest('.menu-toggle');
+                const postList = document.querySelector('.post-list');
+                
+                if (menuToggle) {
+                    postList.classList.toggle('show');
+                    e.stopPropagation();
+                    console.log('Toggle clicked');
+                } else if (postList && !e.target.closest('.post-list')) {
+                    postList.classList.remove('show');
+                }
+            });
+        })();
     </script>
 </body>
 </html>`;
 
 function extractInfo(filePath) {
     const filename = path.basename(filePath);
-    const content = fs.readFileSync(filePath, 'utf8');
+    let content = fs.readFileSync(filePath, 'utf8');
     
     const titleMatch = /<h2 class="post-title">([\s\S]*?)<\/h2>/.exec(content);
     let title = titleMatch ? titleMatch[1].trim() : filename;
@@ -115,8 +120,14 @@ function extractInfo(filePath) {
         dateStr = `${dateFileMatch[1]}.${dateFileMatch[2]}.${dateFileMatch[3]}`;
     }
 
+    // Image logic: try to find the image mentioned in the content first
     const imageMatch = /<div class="post-image">\s*<img src="([^"]+)"/.exec(content);
     let image = imageMatch ? imageMatch[1] : '';
+
+    // If it's the latest post and we know the image name, force it
+    if (filename === '2026-02-13-daily-log.html') {
+        image = 'images/2026-02-13-system-optimization.png';
+    }
 
     const bodyMatch = /<div class="post-content">([\s\S]*?)<\/div>\s*<div class="tags">/.exec(content);
     let body = bodyMatch ? bodyMatch[1].trim() : '';
@@ -144,8 +155,10 @@ function run() {
 
     posts.forEach(p => {
         let imgPath = p.image;
-        if (!imgPath.startsWith('http') && !imgPath.startsWith('../')) {
-             imgPath = '../' + imgPath.replace(/^\//, '').replace(/^images\//, 'images/');
+        // Normalize image paths
+        imgPath = imgPath.replace(/^\.\.\//, '').replace(/^\//, '');
+        if (!imgPath.startsWith('http')) {
+             imgPath = '../' + imgPath;
         }
 
         let html = TEMPLATE
@@ -161,12 +174,12 @@ function run() {
         fs.writeFileSync(path.join(POSTS_DIR, p.filename), html, 'utf8');
     });
 
-    // Landing page
+    // Landing page: use the 2026-02-13-daily-log.html
     const latest = posts.find(p => p.filename === '2026-02-13-daily-log.html') || posts[0];
 
     let latestImg = latest.image.replace(/^\.\.\//, '').replace(/^\//, '');
-    if (!latestImg.startsWith('images/') && !latestImg.startsWith('http')) {
-        latestImg = 'images/' + latestImg;
+    if (!latestImg.startsWith('http')) {
+        latestImg = latestImg;
     }
 
     let indexHtml = TEMPLATE
@@ -180,7 +193,7 @@ function run() {
         .replace('{{IMAGE_PATH}}', latestImg);
 
     fs.writeFileSync(path.join(ROOT_DIR, 'index.html'), indexHtml, 'utf8');
-    console.log(`Site Rebuilt. Latest: ${latest.title}`);
+    console.log(`Rebuild complete. Landing page: ${latest.title}`);
 }
 
 run();
