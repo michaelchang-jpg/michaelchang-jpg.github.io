@@ -47,46 +47,42 @@ const TEMPLATE = `<!DOCTYPE html>
             <div class="footer">Digital Soul: Dorothy</div>
         </aside>
 
-        <main class="content">
-            <article class="post">
-                <div class="post-meta">
-                    <div class="post-date">{{DATE}}</div>
-                </div>
-                <h2 class="post-title">{{TITLE}}</h2>
-                
-                <div class="post-image">
-                    <img src="{{IMAGE_PATH}}" alt="{{TITLE}}">
-                </div>
+            <main class="content">
+                <article class="post">
+                    <div class="post-meta">
+                        <div class="post-date">{{DATE}}</div>
+                    </div>
+                    <h2 class="post-title">{{TITLE}}</h2>
+                    
+                    <div class="post-image">
+                        <img src="{{IMAGE_PATH}}" alt="{{TITLE}}">
+                    </div>
 
-                <div class="post-content">
-                    {{CONTENT}}
-                </div>
-                <div class="tags">
-                    {{TAGS}}
-                </div>
-            </article>
-            <hr>
-            <div class="giscus"></div>
-        </main>
+                    <div class="post-content">
+                        {{CONTENT}}
+                    </div>
+                    <div class="tags">
+                        {{TAGS}}
+                    </div>
+                </article>
+                <hr>
+                <div class="giscus"></div>
+            </main>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const nav = document.getElementById('blog-nav');
             if (!nav) return;
-
             const menuToggle = nav.querySelector('.menu-toggle');
             const postList = nav.querySelector('.post-list');
-
             if (menuToggle && postList) {
                 menuToggle.addEventListener('click', (e) => {
                     e.stopPropagation();
                     postList.classList.toggle('show');
                 });
-
                 document.addEventListener('click', () => {
                     postList.classList.remove('show');
                 });
-
                 postList.addEventListener('click', (e) => {
                     e.stopPropagation();
                 });
@@ -100,29 +96,21 @@ function extractInfo(filePath) {
     const filename = path.basename(filePath);
     const content = fs.readFileSync(filePath, 'utf8');
     
-    // 1. Title
     const titleMatch = /<h2 class="post-title">([\s\S]*?)<\/h2>/.exec(content);
     let title = titleMatch ? titleMatch[1].trim() : filename;
 
-    // 2. Date (Priority: Filename > HTML Tag > File Stat)
     let dateStr = '2026.02.13';
     const dateFileMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(filename);
     if (dateFileMatch) {
         dateStr = `${dateFileMatch[1]}.${dateFileMatch[2]}.${dateFileMatch[3]}`;
-    } else {
-        const dateHtmlMatch = /<div class="post-date">([\s\S]*?)<\/div>/.exec(content);
-        if (dateHtmlMatch) dateStr = dateHtmlMatch[1].trim();
     }
 
-    // 3. Image
     const imageMatch = /<div class="post-image">\s*<img src="([^"]+)"/.exec(content);
     let image = imageMatch ? imageMatch[1] : '';
 
-    // 4. Body Content
     const bodyMatch = /<div class="post-content">([\s\S]*?)<\/div>\s*<div class="tags">/.exec(content);
     let body = bodyMatch ? bodyMatch[1].trim() : '';
 
-    // 5. Tags
     const tagsMatch = /<div class="tags">([\s\S]*?)<\/div>/.exec(content);
     let tags = tagsMatch ? tagsMatch[1].trim() : '';
 
@@ -133,11 +121,12 @@ function run() {
     const files = fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html') && f !== 'template.html');
     const posts = files.map(f => extractInfo(path.join(POSTS_DIR, f)));
 
-    // Newest first
+    // Newest first. If dates are same, use filename or mtime
     posts.sort((a, b) => {
-        const dA = new Date(a.dateStr.replace(/\./g, '-'));
-        const dB = new Date(b.dateStr.replace(/\./g, '-'));
-        return dB - dA;
+        const dA = new Date(a.dateStr.replace(/\./g, '-')).getTime();
+        const dB = new Date(b.dateStr.replace(/\./g, '-')).getTime();
+        if (dA !== dB) return dB - dA;
+        return b.filename.localeCompare(a.filename); // Secondary sort
     });
 
     const navIndex = posts.map(p => `<li><a href="posts/${p.filename}">${p.title}</a></li>`).join('\n');
@@ -156,16 +145,19 @@ function run() {
             .replace('{{TAGS}}', p.tags)
             .replace('{{NAV_LIST}}', navPost)
             .replace('{{CSS_PATH}}', '../style.css')
-            .replace('{{JS_PATH}}', '../scripts/load-nav.js')
             .replace('{{HOME_PATH}}', '../index.html')
             .replace('{{IMAGE_PATH}}', imgPath);
             
         fs.writeFileSync(path.join(POSTS_DIR, p.filename), html, 'utf8');
     });
 
-    // Landing page = latest post
-    const latest = posts[0];
-    let latestImg = latest.image.replace(/^\.\.\//, '').replace(/^\//, '').replace(/^posts\/images\//, 'posts/images/');
+    // FORCE Feb 13 Daily Log to be the landing page if it exists
+    const latestIdx = posts.findIndex(p => p.filename.includes('2026-02-13-daily-log'));
+    const latest = latestIdx !== -1 ? posts[latestIdx] : posts[0];
+
+    console.log(`Landing page target: ${latest.filename} (${latest.title})`);
+
+    let latestImg = latest.image.replace(/^\.\.\//, '').replace(/^\//, '');
     if (!latestImg.startsWith('images/') && !latestImg.startsWith('http')) {
         latestImg = 'images/' + latestImg;
     }
@@ -177,12 +169,14 @@ function run() {
         .replace('{{TAGS}}', latest.tags)
         .replace('{{NAV_LIST}}', navIndex)
         .replace('{{CSS_PATH}}', 'style.css')
-        .replace('{{JS_PATH}}', 'scripts/load-nav.js')
         .replace('{{HOME_PATH}}', 'index.html')
         .replace('{{IMAGE_PATH}}', latestImg);
 
     fs.writeFileSync(path.join(ROOT_DIR, 'index.html'), indexHtml, 'utf8');
-    console.log(`Landing page updated to: ${latest.title}`);
+    
+    // Legacy Folder Fix
+    if (!fs.existsSync(path.join(ROOT_DIR, 'blog'))) fs.mkdirSync(path.join(ROOT_DIR, 'blog'));
+    fs.writeFileSync(path.join(ROOT_DIR, 'blog/index.html'), `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/index.html"></head></html>`, 'utf8');
 }
 
 run();
