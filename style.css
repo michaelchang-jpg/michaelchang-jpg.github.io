@@ -214,6 +214,9 @@ h2.post-title {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* Responsive Design */
+@media (max-width: 900px) {
     .layout {
         flex-direction: column;
     }
